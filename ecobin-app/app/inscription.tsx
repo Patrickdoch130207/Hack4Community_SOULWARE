@@ -1,8 +1,44 @@
-import React from 'react';
-import { Text, View, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { Text, View, TextInput, StyleSheet, TouchableOpacity, ScrollView ,Alert} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+
+
+
 export default function Index() {
+  
+  const [nom,setNom]=useState("");
+  const [prenom,setPrenom]=useState("");
+  const [email,setEmail]=useState("")
+  const [motdepasse,setMotdepasse]=useState("");
+  const [passconfirm,setPassconfirm]=useState("");
+
+   const handleRegister = async () => {
+    if(motdepasse !== passconfirm) {
+      Alert.alert("Erreur", "Les mots de passe ne correspondent pas");
+      return;
+    }
+
+    try {
+      const response = await fetch('http://10.0.2.2:8000/api/users/register/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({  nom,prenom, email, password:motdepasse }),
+      });
+
+      const data = await response.json();
+      if(response.ok) {
+        Alert.alert("Succès", data.message);
+      } else {
+        Alert.alert("Erreur", JSON.stringify(data));
+      }
+    } catch (error) {
+      Alert.alert("Erreur", error.message);
+    }
+  }
+
+
+ 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -14,13 +50,13 @@ export default function Index() {
 
         
         <View style={styles.form}>
-          <TextInput placeholder="Nom " style={styles.input} />
-          <TextInput placeholder="Prénom" style={styles.input} />
-          <TextInput placeholder="Email" style={styles.input} keyboardType="email-address"/>
-          <TextInput placeholder="Mot de passe" secureTextEntry={true} style={styles.input} />
-          <TextInput placeholder="Confirmer le mot de passe" secureTextEntry={true} style={styles.input} />
+          <TextInput onChangeText={setNom} placeholder="Nom " style={styles.input} />
+          <TextInput onChangeText={setPrenom} placeholder="Prénom" style={styles.input} />
+          <TextInput onChangeText={setEmail} placeholder="Email" style={styles.input} keyboardType="email-address"/>
+          <TextInput onChangeText={setMotdepasse} placeholder="Mot de passe" secureTextEntry={true} style={styles.input} />
+          <TextInput onChangeText={setPassconfirm} placeholder="Confirmer le mot de passe" secureTextEntry={true} style={styles.input} />
 
-          <TouchableOpacity style={styles.button} onPress={() => {}}>
+          <TouchableOpacity style={styles.button} onPress={() => {handleRegister()}}>
             <Text style={styles.buttonText}>S'inscrire</Text>
           </TouchableOpacity>
         </View>
@@ -30,7 +66,8 @@ export default function Index() {
       </ScrollView>
     </SafeAreaView>
   );
-}
+  
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -98,3 +135,6 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
 });
+
+
+
