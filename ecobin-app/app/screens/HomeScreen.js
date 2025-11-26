@@ -129,7 +129,7 @@ const animateIcon = (tabName) => {
         <Text style={styles.navText}>Dashboard</Text>
     </TouchableOpacity>
 
-    <TouchableOpacity style={styles.navItem} onPress={() => { animateIcon("home");navigation.navigate('Camera')}}>
+    <TouchableOpacity style={styles.navItem} onPress={() => { animateIcon("home");navigation.navigate('ImageCaptureScreen')}}>
         <Animated.View style={{ transform: [{ scale: scaleAnim.home }] }}>
         <FAIcon name="recycle" size={16} color={activeTab === "home" ? "#2E7D32" : "#666"} />
         </Animated.View>

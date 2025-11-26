@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 AUTH_USER_MODEL = 'users.CustomUser'
+OPENAI_API_KEY="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"
+MAPBOX_APIKEY=MAPBOX_APIKEY="pk.eyJ1IjoibGF1cmVsaG91ZXRvIiwiYSI6ImNtaWZyY29tcTAwOWozZ3Nlc2M4Y3kzbTcifQ.81jA8r3EGuBI9_zz0O2TIA"
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -42,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',    
     'users',
+    'collecte',
 ]
 
 MIDDLEWARE = [
