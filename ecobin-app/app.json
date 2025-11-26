@@ -11,6 +11,10 @@
     "ios": {
       "supportsTablet": true
     },
+    "permissions": ["CAMERA"],
+    "android": {
+      "permissions": ["CAMERA"]
+    },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
