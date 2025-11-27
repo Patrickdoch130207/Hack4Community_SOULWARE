@@ -6,6 +6,7 @@ import LoginScreen from './screens/LoginScreen';
 import MyCamera from "./screens/Camera";  
 import ChatScreens from "./screens/ChatScreens";
 import ImageCaptureScreen  from "./screens/ImageUploading";
+import AnalyseResultat from "./screens/ResultatScreen";
 
 
 
@@ -23,6 +24,7 @@ export default function App(){
           <Stack.Screen name="Camera" component={MyCamera} /> 
           <Stack.Screen name="ChatScreens" component={ChatScreens} />   
           <Stack.Screen name="ImageCaptureScreen" component={ImageCaptureScreen}/>
+          <Stack.Screen name="AnalyseResultat" component={AnalyseResultat}/>
         </Stack.Navigator>
       
       

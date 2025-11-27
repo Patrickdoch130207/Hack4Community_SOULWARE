@@ -74,7 +74,7 @@ export default function ChatScreen() {
     setMessage('');
 
     try {
-      const response = await fetch("http://192.168.187.90:8000/api/users/chatbot/", {
+      const response = await fetch("http://192.168.1.243:8000/api/users/chatbot/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMessage.text })

@@ -5,6 +5,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  ActivityIndicator,
   Image,
   Alert,
   ScrollView,
@@ -13,7 +14,7 @@ import {
 import Icon from "react-native-vector-icons/FontAwesome";
 import * as ImagePicker from "expo-image-picker";
 
-const ImageCaptureScreen = () => {
+const ImageCaptureScreen = ({ navigation }) => {
   const [selectedImage, setSelectedImage] = useState<{ uri: string } | null>(
     null
   );
@@ -21,6 +22,8 @@ const ImageCaptureScreen = () => {
   const [selectedOption, setSelectedOption] = useState<"camera" | "library">(
     "library"
   );
+  // Pour suivre l'état de l'analyse
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Fonction pour demander les permissions
   const requestPermissions = async (type: "camera" | "library") => {
@@ -36,7 +39,6 @@ const ImageCaptureScreen = () => {
 
   const takePhoto = async () => {
     try {
-      // Demander les permissions d'abord
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
 
       if (status !== "granted") {
@@ -61,6 +63,7 @@ const ImageCaptureScreen = () => {
       console.error("Camera error:", error);
     }
   };
+  
   const chooseFromLibrary = async () => {
     try {
       const { status } =
@@ -104,6 +107,9 @@ const ImageCaptureScreen = () => {
   };
 
   const classifyWaste = async (imageUri) => {
+    // Démarrer l'analyse
+    setIsAnalyzing(true);
+
     const formData = new FormData();
     formData.append("file", {
       uri: imageUri,
@@ -112,33 +118,39 @@ const ImageCaptureScreen = () => {
     } as any);
 
     try {
-      const response = await fetch("http://192.168.187.90:8000/api/predict/image/", {
-        method: "POST",
-        body: formData, // ne pas définir Content-Type ici
-      });
+      const response = await fetch(
+        "http://192.168.1.243:8000/api/predict/image/",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const data = await response.json();
 
       if (response.ok) {
-        const details = data.details; // Récupération des détails complets de Gemini
-
-        Alert.alert(
-          "Résultat de l'analyse",
-          `
-          Objet identifié: ${details.objet_identifie}
-          Classification: ${details.classification_primaire}
-          Consigne de Tri: ${details.consigne_tri}
-          Confiance: ${(data.confidence * 100).toFixed(1)}%
-          `
-        );
-        
+        // Le nom de l'écran "AnalyseResultat" est correct selon App.js
+        navigation.navigate("AnalyseResultat", {
+          classificationData: data,
+        });
       } else {
         Alert.alert("Erreur", data.error || "Erreur inconnue");
       }
     } catch (error) {
-      Alert.alert("Erreur réseau", error.message);
+      Alert.alert(
+        "Erreur réseau",
+        "Impossible de contacter le serveur : " + error.message
+      );
+    } finally {
+      // Arrêter l'analyse (qu'il y ait succès ou échec)
+      setIsAnalyzing(false);
     }
+    // AUCUN return JSX ici
   };
+
+  // ------------------------------------------------------------------
+  // DÉBUT DU RENDU PRINCIPAL DU COMPOSANT (CORRIGÉ)
+  // ------------------------------------------------------------------
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -219,7 +231,7 @@ const ImageCaptureScreen = () => {
           <View style={styles.previewContainer}>
             <Text style={styles.previewTitle}>Aperçu de l'image</Text>
             <Image
-              source={{ uri: selectedImage!.uri }} // ou selectedImage && { uri: selectedImage.uri }
+              source={{ uri: selectedImage.uri }}
               style={styles.previewImage}
             />
 
@@ -227,11 +239,15 @@ const ImageCaptureScreen = () => {
               <TouchableOpacity
                 style={styles.secondaryButton}
                 onPress={resetSelection}
+                disabled={isAnalyzing}
               >
                 <Text style={styles.secondaryButtonText}>Changer d'image</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.primaryButton}
+                style={[
+                  styles.primaryButton,
+                  isAnalyzing && styles.primaryButtonDisabled,
+                ]}
                 onPress={() => {
                   if (selectedImage?.uri) {
                     classifyWaste(selectedImage.uri);
@@ -242,8 +258,21 @@ const ImageCaptureScreen = () => {
                     );
                   }
                 }}
+                disabled={isAnalyzing} // Désactivation complète du clic
               >
-                <Text style={styles.primaryButtonText}>Analyser le déchet</Text>
+                {/* Contenu conditionnel : Indicateur ou Texte */}
+                {isAnalyzing ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator color="#fff" />
+                    <Text style={styles.primaryButtonText}>
+                      Analyse en cours...
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={styles.primaryButtonText}>
+                    Analyser le déchet
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -275,7 +304,9 @@ const ImageCaptureScreen = () => {
     </SafeAreaView>
   );
 };
-
+// ------------------------------------------------------------------
+// STYLES DÉPLACÉS ET NETTOYÉS
+// ------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -325,6 +356,7 @@ const styles = StyleSheet.create({
   optionsContainer: {
     marginBottom: 30,
     alignItems: "center",
+    width: "100%",
   },
   optionCard: {
     backgroundColor: "#fff",
@@ -338,6 +370,7 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderWidth: 2,
     borderColor: "transparent",
+    width: "100%",
   },
   optionCardSelected: {
     borderColor: "#2E7D32",
@@ -405,11 +438,22 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
     alignItems: "center",
+    justifyContent: "center",
+    minHeight: 48,
   },
   primaryButtonText: {
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  primaryButtonDisabled: {
+    backgroundColor: "#689F38", 
+    opacity: 0.8,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   secondaryButton: {
     backgroundColor: "#e0e0e0",
@@ -419,6 +463,8 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
     alignItems: "center",
+    justifyContent: "center",
+    minHeight: 48,
   },
   secondaryButtonText: {
     color: "#333",
