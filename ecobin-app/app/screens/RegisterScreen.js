@@ -8,7 +8,12 @@ import {
   ScrollView,
   Alert,
   StatusBar,
-} from 'react-native';
+  KeyboardAvoidingView,
+} 
+
+from 'react-native';
+
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -63,7 +68,10 @@ export default function RegisterScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <KeyboardAwareScrollView enableOnAndroid extraScrollHeight={100} contentContainerStyle={styles.scrollContent}>
+                
+
+      
         
         {/* Header (inchangé) */}
         <View style={styles.header}>
@@ -83,20 +91,7 @@ export default function RegisterScreen({ navigation }) {
 
           
           <View style={styles.form}>
-            {/* Prénom */}
-            <View style={styles.inputContainer}>
-              <Icon name="user-o" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                ref={prenomRef}
-                style={styles.textInput}
-                placeholder="Prénom"
-                placeholderTextColor="#999"
-                value={prenom}
-                onChangeText={setPrenom}
-                returnKeyType="next"
-                onSubmitEditing={() => nomRef.current && nomRef.current.focus()}
-              />
-            </View>
+           
             
             {/* Nom */}
             <View style={styles.inputContainer}>
@@ -110,6 +105,21 @@ export default function RegisterScreen({ navigation }) {
                 onChangeText={setNom}
                 returnKeyType="next"
                 onSubmitEditing={() => emailRef.current && emailRef.current.focus()}
+              />
+            </View>
+
+             {/* Prénom */}
+            <View style={styles.inputContainer}>
+              <Icon name="user-o" size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                ref={prenomRef}
+                style={styles.textInput}
+                placeholder="Prénom"
+                placeholderTextColor="#999"
+                value={prenom}
+                onChangeText={setPrenom}
+                returnKeyType="next"
+                onSubmitEditing={() => nomRef.current && nomRef.current.focus()}
               />
             </View>
 
@@ -177,7 +187,8 @@ export default function RegisterScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
+      
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

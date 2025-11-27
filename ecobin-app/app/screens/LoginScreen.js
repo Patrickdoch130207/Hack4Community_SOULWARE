@@ -55,7 +55,7 @@ export default function LoginScreen({ navigation }) {
         await AsyncStorage.setItem("token", data.access);
         navigation.replace("Home");
       } else {
-        // Affiche l'erreur renvoyée par l'API si disponible
+        
         const errorMessage = data.detail || "Email ou mot de passe incorrect";
         Alert.alert("Erreur de connexion", errorMessage);
       }
@@ -74,7 +74,7 @@ export default function LoginScreen({ navigation }) {
         {/* Header - Design Connexion.tsx */}
         <View style={styles.header}>
           {/* L'icône de retour en arrière a été maintenue */}
-          <TouchableOpacity onPress={() => navigation.navigate()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => navigation.navigate("Register")} style={styles.backButton}>
             <Icon name="arrow-left" size={20} color="#333" />
           </TouchableOpacity>
           <Text style={styles.title}>CONNEXION</Text>
