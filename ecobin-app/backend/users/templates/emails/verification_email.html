@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            padding: 20px;
+        }
+        .card {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .code {
+            font-size: 32px;
+            letter-spacing: 5px;
+            color: #2ecc71;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .footer {
+            font-size: 12px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>Bienvenue {{ user.prenom }} 👋</h2>
+    <p>Merci de vous être inscrit sur <strong>EcoBin</strong>.</p>
+    <p>Voici votre code de vérification :</p>
+
+    <div class="code">{{ code }}</div>
+
+    <p>Ce code expire dans 5 minutes.</p>
+    <div class="footer">
+        Si vous n'êtes pas à l'origine de cette inscription, ignorez ce message.
+    </div>
+</div>
+</body>
+</html>
