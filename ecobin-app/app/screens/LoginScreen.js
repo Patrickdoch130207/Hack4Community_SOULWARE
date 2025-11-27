@@ -7,19 +7,22 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  Animated
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
+// Le nom du composant est conservé : LoginScreen
 export default function LoginScreen({ navigation }) {
 
+  // States d'origine
   const [email, setEmail] = useState("");
   const [motdepasse, setMotdepasse] = useState("");
-  const scaleAnim = new Animated.Value(1);
+  
+  // L'animation a été retirée pour coller au nouveau style simple
 
+  // Vérification du token au démarrage (Logique de LoginScreen.js)
   useEffect(() => {
     const checkToken = async () => {
       const token = await AsyncStorage.getItem("token");
@@ -28,9 +31,16 @@ export default function LoginScreen({ navigation }) {
     checkToken();
   }, [navigation]);
 
+  // Logique de connexion (inchangée)
   const handleLogin = async () => {
+    // Validation simple
+    if (!email || !motdepasse) {
+        Alert.alert("Erreur", "Veuillez entrer votre email et votre mot de passe.");
+        return;
+    }
+
     try {
-      const response = await fetch("http://192.168.1.243:8000/api/users/login/", {
+      const response = await fetch("http://192.168.187.90:8000/api/users/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -45,132 +55,200 @@ export default function LoginScreen({ navigation }) {
         await AsyncStorage.setItem("token", data.access);
         navigation.replace("Home");
       } else {
-        Alert.alert("Email ou mot de passe incorrect");
+        // Affiche l'erreur renvoyée par l'API si disponible
+        const errorMessage = data.detail || "Email ou mot de passe incorrect";
+        Alert.alert("Erreur de connexion", errorMessage);
       }
     } catch (error) {
-      Alert.alert("Erreur serveur");
+      console.error("Erreur serveur lors de la connexion:", error);
+      Alert.alert("Erreur serveur", "Impossible de se connecter au serveur. Veuillez réessayer.");
     }
   };
 
-  const animatePress = () => {
-    Animated.sequence([
-      Animated.timing(scaleAnim, { toValue: 0.95, useNativeDriver: true, duration: 100 }),
-      Animated.timing(scaleAnim, { toValue: 1, useNativeDriver: true, duration: 100 })
-    ]).start(handleLogin);
-  };
 
   return (
-    <LinearGradient colors={['#022c22', '#064e3b', '#16a34a']} style={styles.container}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.wrapper}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        
+        {/* Header - Design Connexion.tsx */}
+        <View style={styles.header}>
+          {/* L'icône de retour en arrière a été maintenue */}
+          <TouchableOpacity onPress={() => navigation.navigate()} style={styles.backButton}>
+            <Icon name="arrow-left" size={20} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.title}>CONNEXION</Text>
+          <View style={styles.placeholder} />
+        </View>
 
-          <View style={styles.glassCard}>
-            <Text style={styles.logo}>Ecobin</Text>
-            <Text style={styles.slogan}>Connexion </Text>
+        {/* Contenu - Design Connexion.tsx */}
+        <View style={styles.content}>
+          <Text style={styles.welcomeText}>
+            Content de vous revoir !{'\n'}
+            Connectez-vous à votre compte.
+          </Text>
 
-            <View style={styles.inputBox}>
-              <Ionicons name="mail-outline" size={20} color="#a7f3d0" />
+          {/* Formulaire */}
+          <View style={styles.form}>
+            {/* Champ Email */}
+            <View style={styles.inputContainer}>
+              <Icon name="envelope" size={18} color="#666" style={styles.inputIcon} />
               <TextInput
+                style={styles.textInput}
                 placeholder="Email"
-                placeholderTextColor="#d1fae5"
+                placeholderTextColor="#999"
+                keyboardType="email-address"
+                autoCapitalize="none"
                 value={email}
                 onChangeText={setEmail}
-                style={styles.input}
+                returnKeyType="next"
               />
             </View>
 
-            <View style={styles.inputBox}>
-              <Ionicons name="lock-closed-outline" size={20} color="#a7f3d0" />
+            {/* Champ Mot de passe */}
+            <View style={styles.inputContainer}>
+              <Icon name="lock" size={20} color="#666" style={styles.inputIcon} />
               <TextInput
+                style={styles.textInput}
                 placeholder="Mot de passe"
-                placeholderTextColor="#d1fae5"
+                placeholderTextColor="#999"
+                secureTextEntry
                 value={motdepasse}
                 onChangeText={setMotdepasse}
-                secureTextEntry
-                style={styles.input}
+                returnKeyType="done"
+                onSubmitEditing={handleLogin}
               />
             </View>
 
-            <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-              <TouchableOpacity onPress={animatePress} activeOpacity={0.9}>
-                <LinearGradient
-                  colors={['#22c55e', '#4ade80']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.button}
-                >
-                  <Text style={styles.buttonText}>Connexion </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </Animated.View>
-            <TouchableOpacity onPress={() => navigation.navigate("Register")} style={{ marginTop: 20 }}>
-              <Text style={{ color: '#a7f3d0', textAlign: 'center' }}>
-                Pas de compte ? <Text style={{ fontWeight: 'bold' }}>S'inscrire</Text>
-              </Text>
+            {/* Mot de passe oublié (Navigation vers PasswordResetRequest de l'original) */}
+            <TouchableOpacity 
+              style={styles.forgotPassword}
+              onPress={() => navigation.navigate('PasswordResetRequest')} // Route de l'original LoginScreen
+            >
+              <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
+            </TouchableOpacity>
+
+            {/* Bouton de Connexion */}
+            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+              <Text style={styles.loginButtonText}>SE CONNECTER</Text>
             </TouchableOpacity>
           </View>
+         
 
-        </ScrollView>
-      </SafeAreaView>
-    </LinearGradient>
+          {/* Lien vers inscription (Navigation vers Register de l'original) */}
+          <View style={styles.signupLink}>
+            <Text style={styles.signupText}>Nouveau ici ? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Register')}> 
+              <Text style={styles.signupLinkText}>Créer un compte</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
+// Styles copiés et adaptés de Connexion.tsx
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
   },
-  wrapper: {
+  scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
   },
-  glassCard: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 30,
-    padding: 30,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    shadowColor: '#000',
-    shadowOpacity: 0.4,
-    shadowOffset: { width: 0, height: 15 },
-    shadowRadius: 30,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
   },
-  logo: {
-    fontSize: 42,
-    fontWeight: '900',
-    color: '#ecfdf5',
+  backButton: {
+    padding: 5,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2E7D32', // Couleur verte de Connexion.tsx
+    letterSpacing: 1,
+  },
+  placeholder: {
+    width: 30,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 30,
+    paddingTop: 40,
+  },
+  welcomeText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
     textAlign: 'center',
-    letterSpacing: 2,
+    marginBottom: 40,
+    lineHeight: 32,
   },
-  slogan: {
-    color: '#a7f3d0',
-    textAlign: 'center',
+  form: {
     marginBottom: 30,
   },
-  inputBox: {
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 16,
-    paddingHorizontal: 15,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 15,
     marginBottom: 20,
+    paddingHorizontal: 15,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
-  input: {
+  inputIcon: {
+    marginRight: 10,
+  },
+  textInput: {
     flex: 1,
-    padding: 14,
-    color: '#ecfdf5',
+    paddingVertical: 15,
     fontSize: 16,
+    color: '#333',
   },
-  button: {
+  forgotPassword: {
+    alignItems: 'flex-end',
+    marginBottom: 25,
+  },
+  forgotPasswordText: {
+    color: '#2E7D32', // Couleur verte de Connexion.tsx
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  loginButton: {
+    backgroundColor: '#2E7D32', // Couleur verte de Connexion.tsx
     paddingVertical: 16,
-    borderRadius: 18,
+    borderRadius: 15,
     alignItems: 'center',
-    marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  buttonText: {
-    color: '#064e3b',
+  loginButtonText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: 'bold',
-    fontSize: 18,
+    letterSpacing: 1,
+  },
+  signupLink: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  signupText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  signupLinkText: {
+    color: '#2E7D32', // Couleur verte de Connexion.tsx
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });

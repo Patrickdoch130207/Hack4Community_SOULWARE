@@ -11,8 +11,8 @@ import {
   Platform,
   FlatList,
   Keyboard,
-  Modal, // <-- Ajouté
-  TouchableWithoutFeedback // <-- Ajouté
+  Modal, 
+  TouchableWithoutFeedback 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FA5Icon from 'react-native-vector-icons/FontAwesome5';
@@ -20,7 +20,7 @@ import FAIcon from 'react-native-vector-icons/FontAwesome';
 
 export default function ChatScreen() {
   const [message, setMessage] = useState('');
-  // const [showQuickActions, setShowQuickActions] = useState(false); // Non utilisé/retiré
+  
   const [menuVisible, setMenuVisible] = useState(false);  
   const [messages, setMessages] = useState([
     {
@@ -33,7 +33,7 @@ export default function ChatScreen() {
 
   const scrollViewRef = useRef();
 
-  // Les données sont conservées, mais le rendu des actions rapides change
+  
   const quickActions = [
     { id: 1, icon: 'image', title: 'Identifier un déchet', color: '#2E7D32' },
     { id: 2, icon: 'lightbulb-o', title: 'Conseils recyclage', color: '#F57C00' },
@@ -42,7 +42,7 @@ export default function ChatScreen() {
   ];
 
   const handleQuickAction = (action) => {
-    setMenuVisible(false); // Fermer le menu après la sélection
+    setMenuVisible(false); 
     let response = '';
     switch(action.title) {
       case 'Identifier un déchet':
@@ -74,13 +74,13 @@ export default function ChatScreen() {
     setMessage('');
 
     try {
-      const response = await fetch("http://192.168.1.243:8000/api/users/chatbot/", {
+      const response = await fetch("http://192.168.187.90:8000/api/users/chatbot/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMessage.text })
       });
       const data = await response.json();
-      // Assurez-vous que la réponse du bot est bien data.reply comme dans l'original
+      
       const botMessage = { id: Date.now() + 1, text: data.reply, sender: 'bot', timestamp: new Date() }; 
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
@@ -126,7 +126,7 @@ export default function ChatScreen() {
 
     <KeyboardAvoidingView style={styles.content} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
         
-        {/* L'ancienne zone des actions rapides a été retirée pour le menu */}
+        
 
         {/* Zone de saisie */}
         <View style={styles.inputContainer}>
@@ -139,7 +139,7 @@ export default function ChatScreen() {
                 multiline
             />
             
-            {/* Bouton Menu pour les actions rapides (comme dans Bot.tsx) */}
+            
             <TouchableOpacity 
                 style={[styles.menuButton]}
                 onPress={() => setMenuVisible(true)}
@@ -149,7 +149,7 @@ export default function ChatScreen() {
 
 
             <TouchableOpacity 
-                style={[styles.sendButton, !message && styles.sendButtonDisabled]} // Ajout du style disabled
+                style={[styles.sendButton, !message && styles.sendButtonDisabled]} 
                 onPress={sendMessage} 
                 disabled={!message}
             >
@@ -158,7 +158,7 @@ export default function ChatScreen() {
         </View>
     </KeyboardAvoidingView>
 
-    {/* Modal pour les actions rapides (copié de Bot.tsx) */}
+    
     <Modal
         transparent
         visible={menuVisible}
@@ -187,7 +187,7 @@ export default function ChatScreen() {
   );
 }
 
-// Les styles de Bot.tsx ont été appliqués ici
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,

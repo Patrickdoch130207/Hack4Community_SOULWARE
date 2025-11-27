@@ -52,7 +52,7 @@ const animateIcon = (tabName) => {
         <Text style={styles.sectionTitle}></Text>
         <View style={styles.quickActions}>
           <View style={styles.actionRow}>
-            <TouchableOpacity style={[styles.actionButton, styles.recycle]}>
+            <TouchableOpacity style={[styles.actionButton, styles.recycle]} onPress={() => { animateIcon("home");navigation.navigate('ImageCaptureScreen')}}>
               <FAIcon name="camera" size={24} color="#fff" />
               <Text style={styles.actionTitle}> Recycler</Text>
               <Text style={styles.actionSubtitle}>Prendre une photo pour identifier le déchet</Text>

@@ -119,7 +119,7 @@ const ImageCaptureScreen = ({ navigation }) => {
 
     try {
       const response = await fetch(
-        "http://192.168.1.243:8000/api/predict/image/",
+        "http://192.168.187.90:8000/api/predict/image/",
         {
           method: "POST",
           body: formData,

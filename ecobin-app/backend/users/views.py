@@ -1,6 +1,7 @@
+from datetime import timedelta
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate,get_user_model
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -11,6 +12,12 @@ import openai
 from openai import OpenAI
 import json
 from django.http import JsonResponse
+from django.core.mail import send_mail
+from .utils import generate_verification_code, save_code
+from django.template.loader import render_to_string
+from django.utils import timezone
+import string
+import random
 
 
 prompt_system = (
@@ -49,12 +56,36 @@ client = OpenAI(api_key=settings.OPENAI_API_KEY)
 @csrf_exempt
 @api_view(['POST'])
 def register_user(request):
+
     serializer = UserSerializer(data=request.data)
+
     if serializer.is_valid():
-        serializer.save()
-        print("yes")
-        return Response({"message": "Utilisateur créé avec succès"}, status=status.HTTP_201_CREATED)
+        user = serializer.save()  
+        print("Utilisateur créé:", user)
+
+        code=save_code(user)
+
+
+        html_message = render_to_string("emails/verification_email.html", {
+                "user": user,
+                "code": code
+                })
+
+        send_mail(
+            subject="Vérification de votre compte EcoBin",
+            message=f"Votre code de vérification est : {code}",  # fallback texte
+            from_email="noreply@ecobin.com",
+            recipient_list=[user.email],
+            html_message=html_message
+              )
+
+        return Response(
+            {"message": "Utilisateur créé avec succès. Vérifiez votre email."},
+            status=status.HTTP_201_CREATED
+        )
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(['POST'])
@@ -65,29 +96,35 @@ def login(request):
     user = authenticate(username=email, password=password)
 
     if user is not None:
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'user': {
-                'id': user.id,
-                'email': user.email,
-                'username': user.username,
-            }
-        })
-    else:
+     if not user.email_verified :
         return Response(
-            {'error': 'Email ou mot de passe incorrect'},
-            status=status.HTTP_401_UNAUTHORIZED
+            {'error': 'Veuillez vérifier votre email avant de vous connecter.'},
+            status=status.HTTP_403_FORBIDDEN
         )
+
+     refresh = RefreshToken.for_user(user)
+     return Response({
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+        'user': {
+            'id': user.id,
+            'email': user.email,
+            'username': user.username,
+            'email_verified': user.email_verified,
+        }
+    })
+    else:
+       return Response(
+        {'error': 'Email ou mot de passe incorrect'},
+        status=status.HTTP_401_UNAUTHORIZED
+    )
     
 
 @api_view(['POST'])
 def home(request):
     return Response({"message": "Bienvenue à la page d'accueil!"}, status=status.HTTP_200_OK)    
 
-OREUS_API_KEY = "TA_CLE_API"
-OREUS_URL = "https://api.oreus.ai/chat"  # exemple
+
 
 @csrf_exempt
 @api_view(['POST'])
@@ -113,6 +150,97 @@ def chatbot(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+
+@api_view(['POST'])
+def verify_code(request):
+
+    User = get_user_model()
+    email = request.data.get("email")
+    code = request.data.get("code")
+
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response({"error": "Utilisateur introuvable"}, status=404)
+
+    if user.verification_code != code:
+        return Response({"error": "Code invalide"}, status=400)
+
+    if user.code_expiry < timezone.now():
+        return Response({"error": "Code expiré"}, status=400)
+
+    user.email_verified = True
+    user.save()
+
+    return Response({"message": "Compte vérifié avec succès ✅"})
+
+def generate_code(length=6):
+    return ''.join(random.choices(string.digits, k=length))
+
+
+@api_view(['POST'])
+def password_reset_request(request):
+    User = get_user_model()
+    email = request.data.get("email")
+
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        # On ne révèle pas si l'email existe ou non
+        return Response(
+            {'message': 'Si cet email existe, un code a été envoyé.'},
+            status=status.HTTP_200_OK
+        )
+
+    code = generate_code()
+    user.verification_code = code
+    user.code_expiry = timezone.now() + timedelta(minutes=15)
+    user.save()
+
+    send_mail(
+        subject="Code de réinitialisation EcoBin",
+        message=f"Votre code de réinitialisation est : {code}",
+        from_email="noreply@ecobin.com",
+        recipient_list=[email]
+    )
+
+    return Response(
+        {'message': 'Si cet email existe, un code a été envoyé.'},
+        status=status.HTTP_200_OK
+    )
+
+
+@api_view(['POST'])
+def password_reset_confirm(request):
+    User = get_user_model()
+    email = request.data.get("email")
+    code = request.data.get("code")
+    new_password = request.data.get("new_password")
+
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response({'error': 'Code invalide'}, status=400)
+
+    if user.verification_code != code:
+        return Response({'error': 'Code invalide'}, status=400)
+
+    if user.code_expiry < timezone.now():
+        return Response({'error': 'Code expiré'}, status=400)
+
+    user.set_password(new_password)
+    user.verification_code = ""
+    user.code_expiry = None
+    user.save()
+
+    return Response(
+        {'message': 'Mot de passe réinitialisé avec succès '},
+        status=status.HTTP_200_OK
+    )
+
+
+
+
     
 
 
