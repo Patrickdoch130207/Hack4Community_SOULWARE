@@ -108,7 +108,6 @@ Make sure your phone and computer are on the same Wi-Fi network.
 
 ## Running the backend
 
-`## Running the backend
  
 ```bash
 cd backend
