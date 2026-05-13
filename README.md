@@ -108,10 +108,31 @@ Make sure your phone and computer are on the same Wi-Fi network.
 
 ## Running the backend
 
- 
+**Create and activate a virtual environment:**
+
 ```bash
-cd backend
+cd ecobin-app/backend
+python3 -m venv venv
+source venv/bin/activate        # Linux / Mac
+venv\Scripts\activate           # Windows
+```
+
+**Install dependencies:**
+
+```bash
 pip install -r requirements.txt
+```
+
+**Set up environment variables:**
+
+```bash
+cp .env.example .env
+# Then fill in your keys in the .env file
+```
+
+**Run migrations and start the server:**
+
+```bash
 python manage.py migrate
 python manage.py runserver
 ```
